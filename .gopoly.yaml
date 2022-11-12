@@ -1,0 +1,30 @@
+types:
+  - type: AdvertBase
+    subtypes:
+      - RentAdvert
+      - SellAdvert
+    discriminator:
+      field: "type"
+      mapping:
+        SELL: SellAdvert
+        RENT: RentAdvert
+    marker_method: "IsAdvertBase"
+    decoding_strategy: "discriminator"
+    template_file: "template_owner.txt"
+    filename: "advert_base_gopoly.gen.go"
+    package_path: "github.com/eugenenosenko/gopoly/internal/models"
+  - type: Property
+    decoding_strategy: "strict"
+  - type: Owner
+    discriminator:
+      field: "kind"
+      mapping:
+        INDIVIDUAL: IndividualOwner
+        AGENCY: AgencyOwner
+        DEVELOPER: DeveloperOwner
+  - type: Contact
+marker_method: "Is{{ .Type }}"
+decoding_strategy: "strict"
+template_file: "codegen.gotmpl"
+filename: "gopoly.gen.go"
+package_path: "github.com/eugenenosenko/gopoly/internal/models"

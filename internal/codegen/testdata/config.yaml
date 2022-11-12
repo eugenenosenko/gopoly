@@ -1,0 +1,25 @@
+types:
+  - type: AdvertBase
+    subtypes:
+      - RentAdvert
+      - SellAdvert
+    discriminator:
+      field: "type"
+      mapping:
+        SELL: SellAdvert
+        RENT: RentAdvert
+    marker_method: "IsAdvert"
+    decoding_strategy: "discriminator"
+    template_file: "template_owner.txt"
+  - type: Property
+    decoding_strategy: "strict"
+  - type: Owner
+    discriminator:
+      field: "kind"
+      mapping:
+        INDIVIDUAL: IndividualOwner
+        AGENCY: AgencyOwner
+        DEVELOPER: DeveloperOwner
+marker_method: "Is{{ $type.Name }}"
+decoding_strategy: "strict"
+template_file: "template.txt"
