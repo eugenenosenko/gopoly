@@ -1,4 +1,4 @@
-package xmap
+package xmaps
 
 import (
 	"reflect"

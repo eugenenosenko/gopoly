@@ -1,11 +1,13 @@
-package xmap
+package xmaps
 
-func KeysFunc[M ~map[K]V, O ~[]T, K, V comparable, T any](m M, f func(K) T) O {
-	out := make(O, 0, len(m))
-	for k, _ := range m {
-		out = append(out, f(k))
+func Merge[M map[K]V, K comparable, V any](maps ...M) M {
+	res := make(M, 0)
+	for _, m := range maps {
+		for k, v := range m {
+			res[k] = v
+		}
 	}
-	return out
+	return res
 }
 
 func Difference[M map[K]V, K, V comparable](m1, m2 M) M {

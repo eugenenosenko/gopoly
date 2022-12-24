@@ -1,4 +1,23 @@
 types:
+  - type: Event
+    package: "github.com/eugenenosenko/gopoly/internal/events"
+    output:
+      filename: "gopoly.gen.go"
+  - type: Typ
+    package: "github.com/eugenenosenko/gopoly/internal/types"
+    output:
+      filename: "gopoly.gen.go"
+  - type: OwnerEvent
+    package: "github.com/eugenenosenko/gopoly/internal/events"
+    output:
+      filename: "gopoly.gen.go"
+    marker_method: "IsOwner"
+    decoding_strategy: "discriminator"
+    discriminator:
+      field: "type"
+      mapping:
+        CLOSED: OwnerClosedEvent
+        OPEN: OwnerOpenEvent
   - type: AdvertBase
     subtypes:
       - RentAdvert
@@ -9,22 +28,22 @@ types:
         SELL: SellAdvert
         RENT: RentAdvert
     marker_method: "IsAdvertBase"
-    decoding_strategy: "discriminator"
-    template_file: "template_owner.txt"
-    filename: "advert_base_gopoly.gen.go"
-    package_path: "github.com/eugenenosenko/gopoly/internal/models"
+    output:
+      filename: "internal/models/advert_base_gopoly.gen.go"
+    package: "github.com/eugenenosenko/gopoly/internal/models"
   - type: Property
     decoding_strategy: "strict"
   - type: Owner
     discriminator:
       field: "kind"
       mapping:
+        "": IndividualOwner
         INDIVIDUAL: IndividualOwner
         AGENCY: AgencyOwner
         DEVELOPER: DeveloperOwner
   - type: Contact
 marker_method: "Is{{ .Type }}"
 decoding_strategy: "strict"
-template_file: "codegen.gotmpl"
-filename: "gopoly.gen.go"
-package_path: "github.com/eugenenosenko/gopoly/internal/models"
+package: "github.com/eugenenosenko/gopoly/internal/models"
+output:
+  filename: "gopoly.gen.go"

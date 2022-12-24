@@ -11,7 +11,7 @@ run:
 # All possible options can be found here https://github.com/golangci/golangci-lint/blob/master/.golangci.reference.yml
 linters-settings:
   gci:
-    local-prefixes: git.naspersclassifieds.com
+    local-prefixes: github.com/eugenenosenko/gopoly
 
   revive:
     rules:
@@ -158,7 +158,7 @@ linters:
     - asciicheck # checks that your code does not contain non-ASCII identifiers
     - bidichk # checks for dangerous unicode character sequences
     - bodyclose # checks whether HTTP response body is closed successfully
-    #- contextcheck # checks the function whether use a non-inherited context # TODO: enable after golangci-lint uses https://github.com/sylvia7788/contextcheck/releases/tag/v1.0.7
+     # - contextcheck # checks the function whether use a non-inherited context
     - cyclop # checks function and package cyclomatic complexity
     - dupl # tool for code clone detection
     - durationcheck # checks for two durations multiplied together
@@ -245,14 +245,6 @@ linters:
     #- scopelint # [deprecated, replaced by exportloopref] checks for unpinned variables in go programs
     #- structcheck # [deprecated, replaced by unused] finds unused struct fields
     #- varcheck # [deprecated, replaced by unused] finds unused global variables and constants
-
-    ## disabled for OLX
-    #- testpackage # makes you use a separate _test package, IMO opinionated
-    #- nonamedreturns # reports all named returns, IMO opinionated
-    #- gomoddirectives # manages the use of 'replace', 'retract', and 'excludes' directives in go.mod, IMO nonsense, because we can not avoid replace
-    #- rowserrcheck # checks whether Err of rows is checked successfully, we don't use this package, and it has no generics support yet
-    #- sqlclosecheck # checks that sql.Rows and sql.Stmt are closed, we don't use this package, and it has no generics support yet
-    #- wastedassign # finds wasted assignment statements, we don't use this package, and it has no generics support yet
 
 issues:
   # Maximum count of issues with the same text.

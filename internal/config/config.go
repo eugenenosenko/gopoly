@@ -2,10 +2,13 @@ package config
 
 import (
 	"fmt"
+	"go/build"
 	"os"
 
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
+
+	"github.com/eugenenosenko/gopoly/internal/xslices"
 )
 
 type DecodingStrategy string
@@ -36,27 +39,79 @@ const (
 	DecodingStrategyDiscriminator = DecodingStrategy("discriminator")
 )
 
-type TypeInfo struct {
-	Type             string            `yaml:"type"`
-	Subtypes         []string          `yaml:"subtypes"`
-	MarkerMethod     string            `yaml:"marker_method"`
-	Discriminator    DiscriminatorInfo `yaml:"discriminator"`
-	DecodingStrategy DecodingStrategy  `yaml:"decoding_strategy"`
-	TemplateFile     string            `yaml:"template_file"`
-	Filename         string            `yaml:"filename"`
-	PackagePath      string            `yaml:"package_path"`
+type TypeDefinition struct {
+	Type             string                  `yaml:"type"`
+	Subtypes         []string                `yaml:"subtypes"`
+	MarkerMethod     string                  `yaml:"marker_method"`
+	DecodingStrategy DecodingStrategy        `yaml:"decoding_strategy"`
+	Discriminator    DiscriminatorDefinition `yaml:"discriminator"`
+	Package          string                  `yaml:"package"`
+	Output           OutputConfig            `yaml:"output"`
+}
+
+type Package string
+
+func (p Package) String() string {
+	return string(p)
+}
+
+func (p Package) Name() string {
+	return string(p)
+}
+
+func (p Package) Dir() string {
+	return packageNameToDir(p.Name())
+}
+
+func packageNameToDir(path string) string {
+	p, err := build.Default.Import(path, "", build.FindOnly)
+	if err != nil {
+		panic(err)
+	}
+	return p.Dir
+}
+
+type OutputConfig struct {
+	Filename string `yaml:"filename"`
+}
+
+type TypesList []*TypeDefinition
+
+func (tts TypesList) AssociateByTypeName() map[string]*TypeDefinition {
+	return xslices.ToMap[TypesList, map[string]*TypeDefinition](
+		tts,
+		func(t *TypeDefinition) string {
+			return t.Type
+		},
+		nil,
+	)
 }
 
 type Config struct {
-	Types            []*TypeInfo      `yaml:"types"`
+	Types            TypesList        `yaml:"types"`
 	DecodingStrategy DecodingStrategy `yaml:"decoding_strategy"`
 	MarkerMethod     string           `yaml:"marker_method"`
-	TemplateFile     string           `yaml:"template_file"`
-	Output           string           `yaml:"filename"`
-	PackagePath      string           `yaml:"package_path"`
+	Output           OutputConfig     `yaml:"output"`
+	Package          string           `yaml:"package"`
 }
 
-type DiscriminatorInfo struct {
+func (tts TypesList) AssociateByPkgName() map[string]TypesList {
+	res := make(map[string]TypesList, 0)
+	for _, def := range tts {
+		res[def.Package] = append(res[def.Package], def)
+	}
+	return res
+}
+
+func (tts TypesList) AssociateByOutput() map[string]TypesList {
+	res := make(map[string]TypesList, 0)
+	for _, def := range tts {
+		res[def.Output.Filename] = append(res[def.Output.Filename], def)
+	}
+	return res
+}
+
+type DiscriminatorDefinition struct {
 	Field   string            `yaml:"field"`
 	Mapping map[string]string `yaml:"mapping"`
 }
@@ -64,7 +119,7 @@ type DiscriminatorInfo struct {
 func (c *Config) String() string {
 	data, err := yaml.Marshal(c)
 	if err != nil {
-		return "poly.Config.String: failed build string representation"
+		return "config.Config.String: failed build string representation"
 	}
 	return string(data)
 }
@@ -72,11 +127,11 @@ func (c *Config) String() string {
 func NewConfigFromYAML(filename string) (*Config, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, errors.Wrapf(err, "poly.NewConfigFromYAML: reading filename %s", filename)
+		return nil, errors.Wrapf(err, "config.NewConfigFromYAML: reading filename %s", filename)
 	}
 	var c Config
 	if err = yaml.Unmarshal(data, &c); err != nil {
-		return nil, errors.Wrapf(err, "poly.NewConfigFromYAML: unmarshaling filename %s", filename)
+		return nil, errors.Wrapf(err, "config.NewConfigFromYAML: unmarshaling filename %s", filename)
 	}
 	return &c, nil
 }
@@ -84,4 +139,5 @@ func NewConfigFromYAML(filename string) (*Config, error) {
 var (
 	_ fmt.Stringer = (*Config)(nil)
 	_ fmt.Stringer = (*DecodingStrategy)(nil)
+	_ fmt.Stringer = (*Package)(nil)
 )

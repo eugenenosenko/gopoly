@@ -22,3 +22,5 @@ func newRunInfo() *runInfo {
 	}
 	return &runInfo{modSum: sum, modVersion: version}
 }
+
+var _ fmt.Stringer = (*runInfo)(nil)

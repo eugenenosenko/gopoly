@@ -18,12 +18,12 @@ func TestConfig_New(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Equal(t, &Config{
-			Types: []*TypeInfo{
+			Types: []*TypeDefinition{
 				{
-					Type:         "abc/models.AdvertBase",
-					Subtypes:     []string{"abc/models.RentAdvert", "abc/models.SellAdvert"},
+					Type:         "AdvertBase",
+					Subtypes:     []string{"RentAdvert", "SellAdvert"},
 					MarkerMethod: "IsAdvert",
-					Discriminator: DiscriminatorInfo{
+					Discriminator: DiscriminatorDefinition{
 						Field: "type",
 						Mapping: map[string]string{
 							"SELL": "SellAdvert",
@@ -31,7 +31,6 @@ func TestConfig_New(t *testing.T) {
 						},
 					},
 					DecodingStrategy: DecodingStrategyDiscriminator,
-					TemplateFile:     "template_owner.txt",
 				},
 				{
 					Type:             "Property",
@@ -39,19 +38,18 @@ func TestConfig_New(t *testing.T) {
 				},
 				{
 					Type: "Owner",
-					Discriminator: DiscriminatorInfo{
+					Discriminator: DiscriminatorDefinition{
 						Field: "kind",
 						Mapping: map[string]string{
-							"INDIVIDUAL": "abc/models.IndividualOwner",
-							"AGENCY":     "abc/models.AgencyOwner",
-							"DEVELOPER":  "abc/models.DeveloperOwner",
+							"INDIVIDUAL": "IndividualOwner",
+							"AGENCY":     "AgencyOwner",
+							"DEVELOPER":  "DeveloperOwner",
 						},
 					},
 				},
 			},
 			DecodingStrategy: DecodingStrategyStrict,
 			MarkerMethod:     "Is{{ $type.Name }}",
-			TemplateFile:     "template.txt",
 		}, &c)
 	})
 }
