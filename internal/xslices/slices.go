@@ -17,13 +17,13 @@ func Flatten[S ~[][]T, T any](s S) []T {
 }
 
 func ToSet[S ~[]T, T comparable](s S) map[T]struct{} {
-	return ToSetFunc[S, map[T]struct{}](s, func(t T) T {
+	return ToSetFunc[S](s, func(t T) T {
 		return t
 	})
 }
 
-func ToSetFunc[S ~[]T, O ~map[V]struct{}, T, V comparable](s S, kMapper func(T) V) O {
-	return ToMap[S, O](s, kMapper, func(_ T) struct{} { return struct{}{} })
+func ToSetFunc[S ~[]T, T, V comparable](s S, kMapper func(T) V) map[V]struct{} {
+	return ToMap[S, map[V]struct{}](s, kMapper, func(_ T) struct{} { return struct{}{} })
 }
 
 func ToMap[S ~[]T, O ~map[V]R, T, R, V comparable](s S, kMapper func(T) V, vMapper func(T) R) O {

@@ -4,15 +4,11 @@ import (
     "bytes"
     "encoding/json"
     "fmt"
-{{- if .Imports }}
-{{ range $i := .Imports }}
-    {{ if $i.Aliased }}{{ printf "%s " $i.ShortName }}{{- end -}}{{printf "%q" $i.Path}}
-{{- end }}
-{{- end }}
+	{{- if .Imports }}{{ lookupImports . }}{{- end }}
 )
 
 {{- define "unmarshalers" -}}
-{{ range $d, $variant := .Variants }}
+{{ range $d, $variant := dedupTypes .Variants }}
 {{- if $variant.Fields }}
 
 // UnmarshalJSON JSON marshaler implementations for {{ $variant.Name }} containing polymorphic fields.

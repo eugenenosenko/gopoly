@@ -38,6 +38,7 @@ type Interface struct {
 	Name         string
 	MarkerMethod string
 	Variants     VariantList
+	Pkg          string
 }
 
 func (vvs VariantList) AssociateByVariantName() map[string]*Variant {

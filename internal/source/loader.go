@@ -47,7 +47,7 @@ func NewLoader(c *Config) (*loader, error) {
 }
 
 func (l *loader) Load(ctx context.Context, c []*config.TypeDefinition) (code.SourceList, error) {
-	packages := xslices.ToSetFunc[[]*config.TypeDefinition, map[string]struct{}](
+	packages := xslices.ToSetFunc[[]*config.TypeDefinition](
 		c,
 		func(t *config.TypeDefinition) string { return t.Package },
 	)
@@ -217,14 +217,16 @@ func interfaces(defs map[PkgPath][]*Definition, tts []*config.TypeDefinition) (m
 	if err := validateDefinitions(defs, tts); err != nil {
 		return nil, errors.Wrap(err, "validating tts definitions")
 	}
+	// collect interfaces from definitions
 	pinterfaces := make(map[PkgPath]code.InterfaceList, 0)
 	for _, t := range tts {
+		expected := xslices.ToSet[[]string](maps.Values(t.Discriminator.Mapping))
 		i := &code.Interface{
 			Name:         t.Type,
 			MarkerMethod: t.MarkerMethod,
 			Variants:     []*code.Variant{},
+			Pkg:          t.Package,
 		}
-		expected := xslices.ToSet[[]string](maps.Values(t.Discriminator.Mapping))
 
 		for _, dec := range defs[t.Package] {
 			// check only functions and methods
@@ -270,10 +272,7 @@ func interfaces(defs map[PkgPath][]*Definition, tts []*config.TypeDefinition) (m
 }
 
 func validateNoMissingVariants(vars code.VariantList, expected map[string]struct{}) error {
-	variants := xslices.Map[[]*code.Variant, []string](
-		vars,
-		func(t *code.Variant) string { return t.Name },
-	)
+	variants := xslices.Map[[]*code.Variant, []string](vars, func(t *code.Variant) string { return t.Name })
 	// check if all variants are accounted for
 	if diff := xslices.Difference(variants, maps.Keys(expected)); len(diff) > 0 {
 		return fmt.Errorf("failed to match following %v variants", diff)
