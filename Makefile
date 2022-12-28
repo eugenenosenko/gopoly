@@ -1,4 +1,4 @@
-.PHONY: test all lint vendor
+.PHONY: test lint vendor
 
 vendor:
 	rm -rf vendor

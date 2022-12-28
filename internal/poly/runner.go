@@ -13,6 +13,7 @@ type RunnerConfig struct {
 	Logf          func(format string, args ...any)
 }
 
+// Runner is the main component of the application. It takes source.Loader and codegen.Generator
 type Runner struct {
 	loader    source.Loader
 	generator codegen.Generator

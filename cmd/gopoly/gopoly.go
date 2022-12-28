@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	cfg      = flag.String("c", "", "config file that contains gopoly configuration")
+	cfg      = flag.String("c", ".gopoly.yaml", "config file that contains gopoly configuration")
 	pack     = flag.String("p", "", "scoped package path where models are located")
 	strategy = flag.String("d", "strict", "decoding strategy, either 'strict' or 'discriminator'")
 	out      = flag.String("o", "", "output filename that will contain generated code")
@@ -154,7 +154,7 @@ func main() {
 	}
 
 	generator, err := codegen.NewGenerator(&codegen.Config{
-		FS:   xfs.CreateFunc(os.Create),
+		FS:   xfs.FileCreatorFunc(os.Create),
 		Logf: log.Printf,
 	})
 	if err != nil {
@@ -194,7 +194,7 @@ func main() {
 
 func newMergedConfig() (*config.Config, error) {
 	var target *config.Config
-	if filename := *cfg; filename != "" {
+	if filename := *cfg; filename != "" && xfs.FileExists(filename) {
 		yamlConf, err := config.NewConfigFromYAML(filename)
 		if err != nil {
 			return nil, err

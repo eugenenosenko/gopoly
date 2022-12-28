@@ -87,6 +87,7 @@ func (tts TypesList) AssociateByTypeName() map[string]*TypeDefinition {
 	)
 }
 
+// Config
 type Config struct {
 	Types            TypesList        `yaml:"types"`
 	DecodingStrategy DecodingStrategy `yaml:"decoding_strategy"`

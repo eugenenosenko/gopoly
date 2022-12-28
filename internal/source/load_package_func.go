@@ -14,7 +14,7 @@ type Package struct {
 	Files []*ast.File
 }
 
-func LoadFromPackage(paths []string) ([]*Package, error) {
+func LoadFromPackage(paths ...string) ([]*Package, error) {
 	packs, err := packages.Load(
 		&packages.Config{
 			Mode: packages.NeedSyntax |

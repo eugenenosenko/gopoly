@@ -11,14 +11,18 @@ import (
 	"github.com/eugenenosenko/gopoly/internal/xslices"
 )
 
-var funcs = template.FuncMap{
-	"lower":         strings.ToLower,
-	"upper":         strings.ToUpper,
-	"prefixed":      prefixedField,
-	"lookupImports": lookupImports,
-	"dedupTypes":    dedupTypes,
+func DefaultFuncs() template.FuncMap {
+	return template.FuncMap{
+		"lower":         strings.ToLower,
+		"upper":         strings.ToUpper,
+		"prefixed":      prefixedField,
+		"lookupImports": lookupImports,
+		"dedupTypes":    dedupTypes,
+	}
 }
 
+// lookupImports will fetch required imports for the required Data, without duplicates and
+// returns it in a proper string format.
 func lookupImports(d *Data) string {
 	m := xslices.ToMap[[]*code.Import, map[string]*code.Import](d.Imports, func(i *code.Import) string {
 		return i.Path
@@ -53,6 +57,9 @@ func lookupImports(d *Data) string {
 	return sb.String()
 }
 
+// dedupTypes filters out duplicated variants.
+// User can define multiple discriminator mappings that match to same type.
+// Dedup is required in order to not re-define Unmarshal method for the same code.Variant type.
 func dedupTypes(vars map[string]*code.Variant) []*code.Variant {
 	variants := xslices.ToMap[[]*code.Variant, map[string]*code.Variant](
 		maps.Values(vars), func(v *code.Variant) string {
@@ -61,6 +68,8 @@ func dedupTypes(vars map[string]*code.Variant) []*code.Variant {
 	return maps.Values(variants)
 }
 
+// prefixedField checks whether code.PolyField has an import-prefix and if it has one
+// returns a composed field name, i.e. m.MyModel or models.MyModel.
 func prefixedField(f code.PolyField) string {
 	if f.Prefix != "" {
 		return fmt.Sprintf("%s.", f.Prefix)

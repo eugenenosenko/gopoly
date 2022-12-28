@@ -3,6 +3,7 @@ package codegen
 import (
 	_ "embed"
 	"fmt"
+	"io"
 	"os"
 	"text/template"
 
@@ -19,12 +20,12 @@ type Generator interface {
 }
 
 type Config struct {
-	FS   xfs.Creator
+	FS   xfs.StreamCreator
 	Logf func(format string, args ...any)
 }
 
 type generator struct {
-	fs   xfs.Creator
+	fs   xfs.StreamCreator
 	logf func(format string, args ...any)
 }
 
@@ -36,20 +37,20 @@ func NewGenerator(c *Config) (*generator, error) {
 }
 
 func (g *generator) Generate(t *Task) error {
-	file, err := g.fs.Create(t.Filename)
+	out, err := g.fs.Create(t.Filename)
 	if err != nil {
 		return errors.Wrapf(err, "creating %s file", t.Filename)
 	}
-	defer func(f *os.File) {
-		if err := f.Close(); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "closing file %s", f.Name())
+	defer func(c io.Closer) {
+		if err := c.Close(); err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "closing file %s", t.Filename)
 		}
-	}(file)
+	}(out)
 
 	temp := template.Must(template.New("gopoly").
-		Funcs(funcs).
+		Funcs(DefaultFuncs()).
 		Parse(t.Template))
-	if err = temp.Execute(file, t.Data); err != nil {
+	if err := temp.Execute(out, t.Data); err != nil {
 		return errors.Wrapf(err, "generating code to file %s", t.Filename)
 	}
 	return nil

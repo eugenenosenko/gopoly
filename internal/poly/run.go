@@ -12,6 +12,15 @@ import (
 	"github.com/eugenenosenko/gopoly/internal/xmaps"
 )
 
+// Run is the entry point of the application. Takes context.Context and config.Config and uses that to generate
+// the tasks for the codegen.Generator.
+//
+// Codegen files will be created in the corresponding packages that is because if your config.TypesList contain
+// polymorphic fields, codegen.Generator needs to create custom UnmarshalJSON methods for those.
+//
+// If multiple output files have been provided and the types are located in the same package, then declarations
+// will be split between those files. If multiple types share the same output file but are located in the same package
+// declarations will be created in the same file.
 func (r *Runner) Run(ctx context.Context, c *config.Config) error {
 	i := newRunInfo()
 	r.logf("Running info: %s", i)
@@ -24,7 +33,6 @@ func (r *Runner) Run(ctx context.Context, c *config.Config) error {
 
 	// each definition needs to be generated in its own package
 	// if definition has a separate output filename defined then output should go there
-	//
 	tasks := make([]*codegen.Task, 0)
 	psources := sources.AssociateByPkgName()
 	for filename, types := range c.Types.AssociateByOutput() {

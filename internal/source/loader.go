@@ -17,19 +17,17 @@ import (
 	"github.com/eugenenosenko/gopoly/internal/xtypes"
 )
 
-type PkgPath = string
-
 type Loader interface {
 	Load(c context.Context, path []*config.TypeDefinition) (code.SourceList, error)
 }
 
 type loader struct {
-	loadFunc func(paths []string) ([]*Package, error)
+	loadFunc func(patterns ...string) ([]*Package, error)
 	logf     func(format string, args ...any)
 }
 
 type Config struct {
-	LoadFunc func(paths []string) ([]*Package, error)
+	LoadFunc func(patterns ...string) ([]*Package, error)
 	Logf     func(format string, args ...any)
 }
 
@@ -46,14 +44,15 @@ func NewLoader(c *Config) (*loader, error) {
 	return &loader{loadFunc: c.LoadFunc, logf: c.Logf}, nil
 }
 
+type PkgPath = string
+
 func (l *loader) Load(ctx context.Context, c []*config.TypeDefinition) (code.SourceList, error) {
-	packages := xslices.ToSetFunc[[]*config.TypeDefinition](
-		c,
+	packages := xslices.ToSetFunc[[]*config.TypeDefinition](c,
 		func(t *config.TypeDefinition) string { return t.Package },
 	)
 	packageNames := maps.Keys(packages)
 
-	files, err := l.loadFunc(packageNames)
+	files, err := l.loadFunc(packageNames...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "collecting ast.Files from %v", packageNames)
 	}
@@ -247,7 +246,15 @@ func interfaces(defs map[PkgPath][]*Definition, tts []*config.TypeDefinition) (m
 			var name string
 			if ident, ok := receiver.Type.(*ast.Ident); ok {
 				name = ident.Name
+			} else if star, ok := receiver.Type.(*ast.StarExpr); ok {
+				if !ok {
+					continue
+				}
+				if i, ok := star.X.(*ast.Ident); ok {
+					name = i.Name
+				}
 			}
+
 			// if discriminator check whether the receiver type is defined as a variant of the i-face
 			if t.DecodingStrategy.IsDiscriminator() {
 				if _, ok := expected[name]; ok {

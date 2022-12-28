@@ -1,5 +1,9 @@
 package xslices
 
+import (
+	"fmt"
+)
+
 func Map[S ~[]T, O ~[]R, T, R any](s S, mapper func(T) R) O {
 	out := make([]R, 0, len(s))
 	for _, t := range s {
@@ -36,7 +40,11 @@ func ToMap[S ~[]T, O ~map[V]R, T, R, V comparable](s S, kMapper func(T) V, vMapp
 		if vMapper != nil {
 			out[k] = vMapper(t)
 		} else {
-			out[k] = any(t).(R)
+			r, ok := any(t).(R)
+			if !ok {
+				panic(fmt.Sprintf("cant cast %T", t))
+			}
+			out[k] = r
 		}
 	}
 	return out
