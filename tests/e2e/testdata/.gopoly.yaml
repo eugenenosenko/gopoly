@@ -1,0 +1,49 @@
+types:
+  - type: UserEvent
+    subtypes:
+      - UserDeletedEvent
+      - UserCreatedEvent
+    decoding_strategy: "discriminator"
+    discriminator:
+      field: "type"
+      mapping:
+        DELETED: UserDeletedEvent
+        CREATED: UserCreatedEvent
+    output:
+      filename: "events.gen.go"
+  - type: OrderEvent
+    subtypes:
+      - OrderCompletedEvent
+      - OrderCancelledEvent
+    decoding_strategy: "discriminator"
+    discriminator:
+      field: "type"
+      mapping:
+        COMPLETED: OrderCompletedEvent
+        CANCELLED: OrderCancelledEvent
+    output:
+      filename: "events.gen.go"
+  - type: Order
+    package: "github.com/eugenenosenko/gopoly/tests/e2e/testdata/orders"
+    marker_method: "is{{ .Type }}"
+  - type: Contact
+    package: "github.com/eugenenosenko/gopoly/tests/e2e/testdata/users"
+  - type: User
+    package: "github.com/eugenenosenko/gopoly/tests/e2e/testdata/users"
+    subtypes:
+      - RegularUser
+      - PrivilegedUser
+      - BannedUser
+    discriminator:
+      field: "kind"
+      mapping:
+        REGULAR: RegularUser
+        PRIVILEGED: PrivilegedUser
+        BANNED: BannedUser
+    output:
+      filename: "internal/models/users.gen.go"
+marker_method: "Is{{ .Type }}"
+decoding_strategy: "strict"
+package: "github.com/eugenenosenko/gopoly/tests/e2e/testdata/events"
+output:
+  filename: "gopoly.gen.go"

@@ -1,0 +1,112 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/go-poly",
+    "definitions": {
+        "go-poly": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "types": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Type"
+                    }
+                },
+                "marker_method": {
+                    "type": "string"
+                },
+                "decoding_strategy": {
+                    "$ref": "#/definitions/DecodingStrategy"
+                },
+                "package": {
+                    "type": "string"
+                },
+                "output": {
+                    "$ref": "#/definitions/Output"
+                }
+            },
+            "required": [
+                "decoding_strategy",
+                "marker_method",
+                "output",
+                "package",
+                "types"
+            ],
+            "title": "go-poly"
+        },
+        "DecodingStrategy" : {
+            "type": "string",
+            "enum":  ["strict", "discriminator"]
+        },
+        "Output": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "filename": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "filename"
+            ],
+            "title": "Output"
+        },
+        "Type": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "type": "string"
+                },
+                "package": {
+                    "type": "string"
+                },
+                "decoding_strategy": {
+                    "$ref": "#/definitions/DecodingStrategy"
+                },
+                "output": {
+                    "$ref": "#/definitions/Output"
+                },
+                "marker_method": {
+                    "type": "string"
+                },
+                "discriminator": {
+                    "$ref": "#/definitions/Discriminator"
+                },
+                "subtypes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "title": "Type"
+        },
+        "Discriminator": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "mapping": {
+                    "$ref": "#/definitions/Mapping"
+                }
+            },
+            "required": [
+                "field",
+                "mapping"
+            ],
+            "title": "Discriminator"
+        },
+        "Mapping": {
+            "type": "object",
+            "additionalProperties": {"type": "string"},
+            "required": [],
+            "title": "Mapping"
+        }
+    }
+}

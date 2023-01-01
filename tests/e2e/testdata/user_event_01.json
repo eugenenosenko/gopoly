@@ -1,0 +1,27 @@
+{
+    "id": "12345",
+    "type": "DELETED",
+    "user": {
+        "id": "1234",
+        "kind": "REGULAR",
+        "name": "John Doe",
+        "address": "Kings Road 12, London, UK",
+        "contacts": [
+            {
+                "id": "1",
+                "business_name": "Business Ltd.",
+                "phone": "0 800 122 222",
+                "email": "john.doe@gmail.com"
+            },
+            {
+                "id": "2",
+                "fullname": {
+                    "firstname": "John",
+                    "lastname": "Doe"
+                },
+                "phone": "0 800 122 223",
+                "email": "john.doe@gmail.com"
+            }
+        ]
+    }
+}

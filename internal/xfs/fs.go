@@ -5,14 +5,10 @@ import (
 	"os"
 )
 
-type FileCreatorFunc func(name string) (*os.File, error)
+type FileWriterProviderFunc func(name string) (*os.File, error)
 
-func (f FileCreatorFunc) Create(name string) (io.WriteCloser, error) {
+func (f FileWriterProviderFunc) Provide(name string) (io.WriteCloser, error) {
 	return f(name)
-}
-
-type StreamCreator interface {
-	Create(name string) (io.WriteCloser, error)
 }
 
 func FileExists(filename string) bool {
@@ -22,5 +18,3 @@ func FileExists(filename string) bool {
 	}
 	return !info.IsDir()
 }
-
-var _ StreamCreator = FileCreatorFunc(os.Create)
