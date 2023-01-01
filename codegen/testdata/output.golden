@@ -29,10 +29,12 @@ func UnmarshalAdvertJSON(data []byte) (Advert, error) {
 	}
 }
 
+type intermediateSellAdvert SellAdvert
+
 // UnmarshalJSON JSON marshaler implementations for SellAdvert containing polymorphic fields.
 func (v *SellAdvert) UnmarshalJSON(b []byte) error {
 	var data struct {
-		SellAdvert
+		intermediateSellAdvert
 		Runner json.RawMessage`json:"sell"`
 	}
 	if err := json.Unmarshal(b, &data); err != nil {
@@ -44,7 +46,7 @@ func (v *SellAdvert) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unmarshal SellAdvert.Runner: %v", err)
 	}
 
-	*v = data.SellAdvert
+	*v = SellAdvert(data.intermediateSellAdvert)
 	v.Runner = runnerField
 	return nil
 }
