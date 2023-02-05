@@ -1,22 +1,35 @@
 package poly
 
 import (
+	"context"
+
 	"github.com/pkg/errors"
 
-	"github.com/eugenenosenko/gopoly/codegen"
-	"github.com/eugenenosenko/gopoly/source"
+	"github.com/eugenenosenko/gopoly/code"
 )
 
+// SourceLoader
+type SourceLoader interface {
+	// Load
+	Load(c context.Context, defs []code.Type) (code.SourceList, error)
+}
+
+// CodeGenerator
+type CodeGenerator interface {
+	// Generate
+	Generate(code.Task) error
+}
+
 type RunnerConfig struct {
-	SourceLoader  source.Loader
-	CodeGenerator codegen.Generator
+	SourceLoader  SourceLoader
+	CodeGenerator CodeGenerator
 	Logf          func(format string, args ...any)
 }
 
 // Runner is the main component of the application. It takes source.Loader and codegen.Generator
 type Runner struct {
-	Loader    source.Loader
-	Generator codegen.Generator
+	Loader    SourceLoader
+	Generator CodeGenerator
 	Logf      func(format string, args ...any)
 }
 

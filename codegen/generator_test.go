@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/eugenenosenko/gopoly/code"
-	"github.com/eugenenosenko/gopoly/config"
+	"github.com/eugenenosenko/gopoly/internal/templates"
 )
 
 type dummyCreator struct{ buf *bytes.Buffer }
@@ -42,16 +42,16 @@ func TestGenerator(t *testing.T) {
 		}, Interface: i}
 		i.Variants = code.VariantList{sell}
 
-		err = gen.Generate(&Task{
+		err = gen.Generate(&code.Task{
 			Filename: "_",
-			Template: DefaultJSONTemplate,
-			Data: &Data{
+			Template: templates.DefaultJSONTemplate(),
+			Data: &code.Data{
 				Package: "github.com/eugenenosenko/gopoly/internal/models",
-				Types: []*Type{
+				Types: []code.Type{
 					{
 						Name:               "Advert",
-						Variants:           map[string]*code.Variant{"SELL": sell},
-						DecodingStrategy:   config.DecodingStrategyDiscriminator.String(),
+						Variants:           map[string]code.Variant{"SELL": sell},
+						DecodingStrategy:   code.DecodingStrategyDiscriminator,
 						DiscriminatorField: "type",
 					},
 				},

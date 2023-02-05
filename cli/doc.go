@@ -31,7 +31,7 @@ The flags are:
 		generated in the same package.
 	-m
 		Marker method. Marker-method is a way 'mark' types that belong to a specific interface,
-		basically serving as a metadata. Default value is Is{{.Type}}. And type will be taken from
+		basically serving as a metadata. Default value is Is{{.Name}}. And type will be taken from
 		the interface
 	-t
 		Types information.

@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"flag"
+	"fmt"
 	"os"
 	"regexp"
 	"text/template"
@@ -11,6 +12,7 @@ import (
 	"golang.org/x/exp/maps"
 	"gopkg.in/yaml.v3"
 
+	"github.com/eugenenosenko/gopoly/code"
 	"github.com/eugenenosenko/gopoly/config"
 	"github.com/eugenenosenko/gopoly/internal/xfs"
 )
@@ -42,13 +44,13 @@ func newMergedConfig() (*config.Config, error) {
 		target.Package = p
 	}
 	if s := *strategy; s != "" {
-		target.DecodingStrategy = config.DecodingStrategy(s)
+		target.DecodingStrategy = code.DecodingStrategy(s)
 	}
 
 	ntype := target.Types.AssociateByTypeName()
 	// overwrite what is defined in config file with input from CLI
 	for _, t := range types.types {
-		ntype[t.Type] = t
+		ntype[t.Name] = t
 	}
 
 	for _, t := range ntype {
@@ -62,16 +64,19 @@ func newMergedConfig() (*config.Config, error) {
 			t.Output = target.Output
 		}
 		// validate decoding strategy inputs
-		if t.DecodingStrategy == config.DecodingStrategyStrict && len(t.Discriminator.Mapping) > 0 {
+		if t.DecodingStrategy == code.DecodingStrategyStrict && len(t.Discriminator.Mapping) > 0 {
 			return nil, errors.New("can't have discriminator mapping & strict decoding")
 		}
-		if t.DecodingStrategy == config.DecodingStrategyDiscriminator && len(t.Discriminator.Mapping) == 0 {
+		if t.DecodingStrategy == code.DecodingStrategyDiscriminator && len(t.Discriminator.Mapping) == 0 {
 			return nil, errors.New("can't have discriminator decoding and empty mapping")
 		}
 		if t.DecodingStrategy == "" && len(t.Discriminator.Mapping) > 0 {
-			t.DecodingStrategy = config.DecodingStrategyDiscriminator
+			t.DecodingStrategy = code.DecodingStrategyDiscriminator
 		} else if t.DecodingStrategy == "" {
 			t.DecodingStrategy = target.DecodingStrategy
+		}
+		if !t.DecodingStrategy.IsValid() {
+			return nil, fmt.Errorf("%q is not a valid decoding strategy", t.DecodingStrategy)
 		}
 	}
 	target.Types = maps.Values(ntype)
@@ -84,7 +89,7 @@ func newMergedConfig() (*config.Config, error) {
 				return nil, errors.Wrap(err, "parsing marker-method template field")
 			}
 			var b bytes.Buffer
-			if err = parse.Execute(&b, map[string]string{"Type": def.Type}); err != nil {
+			if err = parse.Execute(&b, map[string]string{"Name": def.Name}); err != nil {
 				return nil, errors.Wrap(err, "executing marker-method template")
 			}
 			def.MarkerMethod = b.String()

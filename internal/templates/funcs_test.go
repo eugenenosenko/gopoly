@@ -1,4 +1,4 @@
-package codegen
+package templates
 
 import (
 	"strings"
@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/eugenenosenko/gopoly/code"
-	"github.com/eugenenosenko/gopoly/config"
 )
 
 func TestLookUpImport(t *testing.T) {
@@ -35,17 +34,17 @@ func TestLookUpImport(t *testing.T) {
 		}, Interface: i}
 		i.Variants = code.VariantList{sell, rent}
 
-		data := &Data{
+		data := &code.Data{
 			Package: "github.com/eugenenosenko/gopoly/internal/models",
-			Types: []*Type{
+			Types: []code.Type{
 				{
 					Name:               "Advert",
-					Variants:           map[string]*code.Variant{"SELL": sell, "RENT": rent},
-					DecodingStrategy:   config.DecodingStrategyDiscriminator.String(),
+					Variants:           map[string]code.Variant{"SELL": sell, "RENT": rent},
+					DecodingStrategy:   code.DecodingStrategyDiscriminator,
 					DiscriminatorField: "type",
 				},
 			},
-			Imports: []*code.Import{
+			Imports: []code.Import{
 				{
 					ShortName: "c",
 					Path:      "github.com/eugenenosenko/gopoly/internal/code",
@@ -63,7 +62,7 @@ func TestLookUpImport(t *testing.T) {
 				},
 			},
 		}
-		got := lookupImports(data)
+		got := LookupImports(data)
 		assert.Equal(t, `"github.com/eugenenosenko/gopoly/internal/models"`, strings.TrimSpace(got))
 	})
 }

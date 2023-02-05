@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/eugenenosenko/gopoly/code"
-	"github.com/eugenenosenko/gopoly/config"
 )
 
 func TestLoad(t *testing.T) {
@@ -18,16 +17,6 @@ func TestLoad(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		got, err := l.Load(context.Background(), []*config.TypeDefinition{
-			{
-				Type:             "Runner",
-				Subtypes:         []string{"FastRunner", "SlowRunner"},
-				MarkerMethod:     "IsRunner",
-				DecodingStrategy: config.DecodingStrategyStrict,
-				Package:          "github.com/eugenenosenko/gopoly/source/testdata",
-				Output:           &config.OutputConfig{Filename: "out.gen.go"},
-			},
-		})
 		runner := &code.Interface{
 			Name:         "Runner",
 			MarkerMethod: "IsRunner",
@@ -42,6 +31,20 @@ func TestLoad(t *testing.T) {
 			},
 		}, Interface: runner}
 		b := &code.Variant{Name: "SlowRunner", Fields: code.PolyFieldList{}, Interface: runner}
+
+		got, err := l.Load(context.Background(), []code.Type{
+			{
+				Name: "Runner",
+				Variants: map[string]code.Variant{
+					"FastRunner": a,
+					"SlowRunner": b,
+				},
+				//Variants:         []string{"FastRunner", "SlowRunner"},
+				MarkerMethod:     "IsRunner",
+				DecodingStrategy: code.DecodingStrategyStrict,
+				Package:          "github.com/eugenenosenko/gopoly/source/testdata",
+			},
+		})
 
 		runner.Variants = code.VariantList{a, b}
 		want := code.SourceList{

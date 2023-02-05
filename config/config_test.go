@@ -6,6 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
+
+	"github.com/eugenenosenko/gopoly/code"
 )
 
 func TestConfig_New(t *testing.T) {
@@ -20,8 +22,8 @@ func TestConfig_New(t *testing.T) {
 		require.Equal(t, &Config{
 			Types: []*TypeDefinition{
 				{
-					Type:         "AdvertBase",
-					Subtypes:     []string{"RentAdvert", "SellAdvert"},
+					Name:         "AdvertBase",
+					Variants:     []string{"RentAdvert", "SellAdvert"},
 					MarkerMethod: "IsAdvert",
 					Discriminator: DiscriminatorDefinition{
 						Field: "type",
@@ -30,14 +32,14 @@ func TestConfig_New(t *testing.T) {
 							"RENT": "RentAdvert",
 						},
 					},
-					DecodingStrategy: DecodingStrategyDiscriminator,
+					DecodingStrategy: code.DecodingStrategyDiscriminator,
 				},
 				{
-					Type:             "Property",
-					DecodingStrategy: DecodingStrategyStrict,
+					Name:             "Property",
+					DecodingStrategy: code.DecodingStrategyStrict,
 				},
 				{
-					Type: "Owner",
+					Name: "Owner",
 					Discriminator: DiscriminatorDefinition{
 						Field: "kind",
 						Mapping: map[string]string{
@@ -48,7 +50,7 @@ func TestConfig_New(t *testing.T) {
 					},
 				},
 			},
-			DecodingStrategy: DecodingStrategyStrict,
+			DecodingStrategy: code.DecodingStrategyStrict,
 			MarkerMethod:     "Is{{ $type.Name }}",
 		}, &c)
 	})

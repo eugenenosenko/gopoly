@@ -1,6 +1,6 @@
 types:
-  - type: UserEvent
-    subtypes:
+  - name: UserEvent
+    variants:
       - UserDeletedEvent
       - UserCreatedEvent
     decoding_strategy: "discriminator"
@@ -11,8 +11,8 @@ types:
         CREATED: UserCreatedEvent
     output:
       filename: "events.gen.go"
-  - type: OrderEvent
-    subtypes:
+  - name: OrderEvent
+    variants:
       - OrderCompletedEvent
       - OrderCancelledEvent
     decoding_strategy: "discriminator"
@@ -23,14 +23,14 @@ types:
         CANCELLED: OrderCancelledEvent
     output:
       filename: "events.gen.go"
-  - type: Order
+  - name: Order
     package: "github.com/eugenenosenko/gopoly/tests/e2e/testdata/orders"
     marker_method: "is{{ .Type }}"
-  - type: Contact
+  - name: Contact
     package: "github.com/eugenenosenko/gopoly/tests/e2e/testdata/users"
-  - type: User
+  - name: User
     package: "github.com/eugenenosenko/gopoly/tests/e2e/testdata/users"
-    subtypes:
+    variants:
       - RegularUser
       - PrivilegedUser
       - BannedUser

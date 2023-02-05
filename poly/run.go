@@ -7,8 +7,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/eugenenosenko/gopoly/code"
-	"github.com/eugenenosenko/gopoly/codegen"
 	"github.com/eugenenosenko/gopoly/config"
+	"github.com/eugenenosenko/gopoly/internal/templates"
 	"github.com/eugenenosenko/gopoly/internal/xmaps"
 )
 
@@ -29,45 +29,42 @@ func (r *Runner) Run(ctx context.Context, c *config.Config) error {
 
 	// each definition needs to be generated in its own package
 	// if definition has a separate output filename defined then output should go there
-	tasks := make([]*codegen.Task, 0)
+	tasks := make([]code.Task, 0)
 	psources := sources.AssociateByPkgName()
 	for filename, types := range c.Types.AssociateByOutput() {
 		for pkg, tts := range types.AssociateByPkgName() {
 			p := code.Package(pkg)
 			src := psources[p]
-			d := codegen.Data{
-				Package: p.Name(),
-				Imports: src.Imports,
-			}
+			d := &data{pkg: p, imports: src.Imports()}
 
 			ntype := tts.AssociateByTypeName()
-			for _, iface := range src.Interfaces {
-				def, ok := ntype[iface.Name]
+			for _, iface := range src.Interfaces() {
+				def, ok := ntype[iface.Name()]
 				if !ok {
 					continue
 				}
 
-				variants := make(map[string]*code.Variant, 0)
+				variants := make(map[string]code.Variant, 0)
 				if def.DecodingStrategy.IsDiscriminator() {
-					nvars := iface.Variants.AssociateByVariantName()
+					nvars := iface.Variants().AssociateByVariantName()
 					for v, name := range def.Discriminator.Mapping { // iterate over discriminator mappings
 						variants[v] = nvars[name]
 					}
 				} else {
-					variants = xmaps.Merge(variants, iface.Variants.AssociateByVariantName())
+					variants = xmaps.Merge(variants, iface.Variants().AssociateByVariantName())
 				}
-				// add type to to-be-generated data with its variants
-				d.Types = append(d.Types, &codegen.Type{
-					Name:               iface.Name,
-					Variants:           variants,
-					DecodingStrategy:   def.DecodingStrategy.String(),
-					DiscriminatorField: def.Discriminator.Field,
+				// add type to to-be-generated *data with its variants
+				d.types = append(d.types, &iType{
+					name:               iface.Name(),
+					variants:           variants,
+					decodingStrategy:   def.DecodingStrategy,
+					discriminatorField: def.Discriminator.Field,
 				})
 			}
-			tasks = append(tasks, &codegen.Task{
-				Filename: outputFilename(p, filename),
-				Template: codegen.DefaultJSONTemplate,
-				Data:     &d,
+			tasks = append(tasks, &codegenTask{
+				filename: outputFilename(p, filename),
+				template: templates.DefaultJSONTemplate(),
+				data:     d,
 			})
 		}
 	}

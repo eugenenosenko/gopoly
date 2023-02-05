@@ -19,9 +19,9 @@ func (a *App) RunInit() error {
 	body, err := yaml.Marshal(config.Config{
 		Types: config.TypesList{
 			{
-				Type:             "A",
-				Subtypes:         []string{"AImpl", "BImpl"},
-				MarkerMethod:     "Is{{ .Type }}",
+				Name:             "A",
+				Variants:         []string{"AImpl", "BImpl"},
+				MarkerMethod:     "Is{{ .Name }}",
 				DecodingStrategy: "discriminator",
 				Package:          "github.com/username/example/events",
 				Discriminator: config.DiscriminatorDefinition{
@@ -33,10 +33,10 @@ func (a *App) RunInit() error {
 				},
 			},
 			{
-				Type: "C",
+				Name: "C",
 			},
 		},
-		MarkerMethod:     "Is{{ .Type }}",
+		MarkerMethod:     "Is{{ .Name }}",
 		DecodingStrategy: "strict",
 		Output: &config.OutputConfig{
 			Filename: "gopoly.gen.go",

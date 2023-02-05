@@ -12,14 +12,10 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/eugenenosenko/gopoly/code"
-	"github.com/eugenenosenko/gopoly/config"
 	"github.com/eugenenosenko/gopoly/internal/xslices"
 	"github.com/eugenenosenko/gopoly/internal/xtypes"
+	"github.com/eugenenosenko/gopoly/poly"
 )
-
-type Loader interface {
-	Load(c context.Context, defs []*config.TypeDefinition) (code.SourceList, error)
-}
 
 type loader struct {
 	loadFunc func(patterns ...string) ([]*Package, error)
@@ -44,11 +40,11 @@ func NewLoader(c *Config) (*loader, error) {
 	return &loader{loadFunc: c.LoadFunc, logf: c.Logf}, nil
 }
 
-type PkgPath = string
+type pkgPath = string
 
-func (l *loader) Load(ctx context.Context, c []*config.TypeDefinition) (code.SourceList, error) {
-	packages := xslices.ToSetFunc[[]*config.TypeDefinition](c,
-		func(t *config.TypeDefinition) string { return t.Package },
+func (l *loader) Load(ctx context.Context, c []code.Type) (code.SourceList, error) {
+	packages := xslices.ToSetFunc[[]code.Type](c,
+		func(t code.Type) string { return t.Package().String() },
 	)
 	packageNames := maps.Keys(packages)
 
@@ -57,7 +53,7 @@ func (l *loader) Load(ctx context.Context, c []*config.TypeDefinition) (code.Sou
 		return nil, errors.Wrapf(err, "collecting ast.Files from %v", packageNames)
 	}
 
-	pdecs := make(map[PkgPath][]*Definition, 0)
+	pdecs := make(map[pkgPath][]*Definition, 0)
 	for d := range declarations(ctx, files) {
 		pdecs[d.PkgPath] = append(pdecs[d.PkgPath], d)
 	}
@@ -67,7 +63,7 @@ func (l *loader) Load(ctx context.Context, c []*config.TypeDefinition) (code.Sou
 		return nil, errors.Wrapf(err, "collecting interfaces from %v", packageNames)
 	}
 
-	psources := make(map[PkgPath]*code.Source, 0)
+	psources := make(map[pkgPath]code.Source, 0)
 	for pkg, i := range ifaces {
 		psources[pkg] = &code.Source{Package: code.Package(pkg), Interfaces: i}
 	}
@@ -110,13 +106,13 @@ func (l *loader) Load(ctx context.Context, c []*config.TypeDefinition) (code.Sou
 	}
 
 	for pkg, decs := range pdecs {
-		types := xslices.Flatten(xslices.Map[[]*code.Interface, [][]*code.Variant](
-			psources[pkg].Interfaces,
-			func(i *code.Interface) []*code.Variant { return i.Variants },
+		types := xslices.Flatten(xslices.Map[[]code.Interface, [][]code.Variant](
+			psources[pkg].Interfaces(),
+			func(i code.Interface) []code.Variant { return i.Variants() },
 		))
 		variants := code.VariantList(types).AssociateByVariantName()
 		pifaces := ifaces[pkg].AssociateByName()
-		imports := psources[pkg].Imports.AssociateByShortName()
+		imports := psources[pkg].Imports().AssociateByShortName()
 
 		for _, dec := range decs {
 			d, ok := dec.Dec.(*ast.GenDecl)
@@ -140,9 +136,9 @@ func (l *loader) Load(ctx context.Context, c []*config.TypeDefinition) (code.Sou
 					continue
 				}
 
-				pfields := make([]*code.PolyField, 0)
+				pfields := make([]code.PolyField, 0)
 				for _, field := range strct.Fields.List {
-					var iface *code.Interface
+					var iface code.Interface
 					var kind int
 					var prefix string
 					if st, ok := field.Type.(*ast.Ident); ok { // scalar type field
@@ -197,7 +193,7 @@ func importPrefix(e ast.Expr) string {
 	return ""
 }
 
-func matchImportedPFIface(se *ast.SelectorExpr, imports map[string]*code.Import) *code.Interface {
+func matchImportedPFIface(se *ast.SelectorExpr, imports map[string]code.Import) code.Interface {
 	name, sname := se.Sel.Name, importPrefix(se.X)
 	i, ok := imports[sname]
 	if !ok {
@@ -212,23 +208,28 @@ func matchImportedPFIface(se *ast.SelectorExpr, imports map[string]*code.Import)
 }
 
 // interfaces iterates decs and tries to match ifaces that were passed with the config
-func interfaces(defs map[PkgPath][]*Definition, tts []*config.TypeDefinition) (map[PkgPath]code.InterfaceList, error) {
+func interfaces(defs map[pkgPath][]*Definition, tts []code.Type) (map[pkgPath]code.InterfaceList, error) {
 	if err := validateDefinitions(defs, tts); err != nil {
 		return nil, errors.Wrap(err, "validating type definitions")
 	}
 
 	// collect interfaces from definitions
-	pinterfaces := make(map[PkgPath]code.InterfaceList, 0)
+	pinterfaces := make(map[pkgPath]code.InterfaceList, 0)
 	for _, t := range tts {
-		expected := xslices.ToSet[[]string](maps.Values(t.Discriminator.Mapping))
+		var variants []string
+		for _, v := range maps.Values(t.Variants) {
+			variants = append(variants, v.Name)
+		}
+
+		expected := xslices.ToSet[[]string](variants)
 		i := &code.Interface{
-			Name:         t.Type,
+			Name:         t.Name,
 			MarkerMethod: t.MarkerMethod,
-			Variants:     []*code.Variant{},
+			Variants:     []code.Variant{},
 			Pkg:          t.Package,
 		}
 
-		for _, dec := range defs[t.Package] {
+		for _, dec := range defs[t.Package.String()] {
 			// check only functions and methods
 			fun, ok := dec.Dec.(*ast.FuncDecl)
 			if !ok {
@@ -257,7 +258,7 @@ func interfaces(defs map[PkgPath][]*Definition, tts []*config.TypeDefinition) (m
 			}
 
 			// if discriminator check whether the receiver type is defined as a variant of the i-face
-			if t.DecodingStrategy.IsDiscriminator() {
+			if t.DecodingStrategy().IsDiscriminator() {
 				if _, ok := expected[name]; ok {
 					i.Variants = append(i.Variants, &code.Variant{Name: name, Interface: i})
 				}
@@ -266,14 +267,14 @@ func interfaces(defs map[PkgPath][]*Definition, tts []*config.TypeDefinition) (m
 			}
 		}
 
-		if t.DecodingStrategy.IsStrict() {
-			pinterfaces[t.Package] = append(pinterfaces[t.Package], i) // just add all variants found
+		if t.DecodingStrategy().IsStrict() {
+			pinterfaces[t.Package.String()] = append(pinterfaces[t.Package.String()], i) // just add all variants found
 		} else {
 			err := validateNoMissingVariants(i.Variants, expected) // validate if all were found
 			if err != nil {
-				return nil, errors.Wrapf(err, "mathing variants for '%s.%s'", t.Package, t.Type)
+				return nil, errors.Wrapf(err, "mathing variants for '%s.%s'", t.Package, t.Name)
 			}
-			pinterfaces[t.Package] = append(pinterfaces[t.Package], i)
+			pinterfaces[t.Package.String()] = append(pinterfaces[t.Package.String()], i)
 		}
 	}
 
@@ -284,7 +285,7 @@ func interfaces(defs map[PkgPath][]*Definition, tts []*config.TypeDefinition) (m
 }
 
 func validateNoMissingVariants(vars code.VariantList, expected map[string]struct{}) error {
-	variants := xslices.Map[[]*code.Variant, []string](vars, func(t *code.Variant) string { return t.Name })
+	variants := xslices.Map[[]code.Variant, []string](vars, func(t code.Variant) string { return t.Name })
 	// check if all variants are accounted for
 	if diff := xslices.Difference(variants, maps.Keys(expected)); len(diff) > 0 {
 		return fmt.Errorf("failed to match following %v variants", diff)
@@ -292,14 +293,14 @@ func validateNoMissingVariants(vars code.VariantList, expected map[string]struct
 	return nil
 }
 
-func validateDefinitions(pdefs map[PkgPath][]*Definition, types []*config.TypeDefinition) error {
-	provided := xslices.ToMap[[]*config.TypeDefinition, map[string]*config.TypeDefinition](
-		types, func(t *config.TypeDefinition) string {
-			return (&xtypes.Tuple[string, string]{First: t.Type, Second: t.Package}).String()
+func validateDefinitions(pdefs map[pkgPath][]*Definition, types []code.Type) error {
+	provided := xslices.ToMap[[]code.Type, map[string]code.Type](
+		types, func(t code.Type) string {
+			return (&xtypes.Tuple[string, string]{First: t.Name, Second: t.Package.String()}).String()
 		}, nil,
 	)
 
-	ifaces := make(map[string]*xtypes.Tuple[*config.TypeDefinition, *ast.InterfaceType])
+	ifaces := make(map[string]*xtypes.Tuple[code.Type, *ast.InterfaceType])
 	for pkg, defs := range pdefs {
 		for _, def := range defs {
 			d, ok := def.Dec.(*ast.GenDecl)
@@ -316,11 +317,11 @@ func validateDefinitions(pdefs map[PkgPath][]*Definition, types []*config.TypeDe
 				if !ok {
 					continue
 				}
-				// composite map key Type.Name + PkgPath
+				// composite map key Name.Name + pkgPath
 				key := (&xtypes.Tuple[string, string]{First: ts.Name.Name, Second: pkg}).String()
 				// check if this interface is among those provided by the configuration
 				if t, present := provided[key]; present {
-					ifaces[key] = &xtypes.Tuple[*config.TypeDefinition, *ast.InterfaceType]{First: t, Second: i}
+					ifaces[key] = &xtypes.Tuple[code.Type, *ast.InterfaceType]{First: t, Second: i}
 				}
 			}
 		}
@@ -352,7 +353,7 @@ func validateDefinitions(pdefs map[PkgPath][]*Definition, types []*config.TypeDe
 		if !found {
 			return fmt.Errorf("interface '%s.%s' missing zero arg/returns marker-method '%s'",
 				v.First.Package,
-				v.First.Type,
+				v.First.Name,
 				v.First.MarkerMethod,
 			)
 		}
@@ -399,4 +400,4 @@ func declarations(ctx context.Context, packs []*Package) <-chan *Definition {
 	return c
 }
 
-var _ Loader = (*loader)(nil)
+var _ poly.SourceLoader = (*loader)(nil)
