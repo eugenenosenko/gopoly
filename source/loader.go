@@ -199,7 +199,7 @@ func matchImportedPFIface(se *ast.SelectorExpr, imports map[string]code.Import) 
 	if !ok {
 		return nil
 	}
-	nifaces := i.Source.Interfaces.AssociateByName()
+	nifaces := i.Source().Interfaces().AssociateByName()
 	iface, ok := nifaces[name]
 	if !ok {
 		return nil
@@ -223,20 +223,20 @@ func interfaces(defs map[pkgPath][]*Definition, tts []code.Type) (map[pkgPath]co
 
 		expected := xslices.ToSet[[]string](variants)
 		i := &code.Interface{
-			Name:         t.Name,
-			MarkerMethod: t.MarkerMethod,
+			Name:         t.Name(),
+			MarkerMethod: t.MarkerMethod(),
 			Variants:     []code.Variant{},
-			Pkg:          t.Package,
+			Pkg:          t.Package(),
 		}
 
-		for _, dec := range defs[t.Package.String()] {
+		for _, dec := range defs[t.Package().String()] {
 			// check only functions and methods
 			fun, ok := dec.Dec.(*ast.FuncDecl)
 			if !ok {
 				continue
 			}
 			// check whether function name matches marker-method
-			if t.MarkerMethod != fun.Name.Name {
+			if t.MarkerMethod() != fun.Name.Name {
 				continue
 			}
 			// get the receiver field
@@ -268,13 +268,13 @@ func interfaces(defs map[pkgPath][]*Definition, tts []code.Type) (map[pkgPath]co
 		}
 
 		if t.DecodingStrategy().IsStrict() {
-			pinterfaces[t.Package.String()] = append(pinterfaces[t.Package.String()], i) // just add all variants found
+			pinterfaces[t.Package().String()] = append(pinterfaces[t.Package().String()], i) // just add all variants found
 		} else {
 			err := validateNoMissingVariants(i.Variants, expected) // validate if all were found
 			if err != nil {
 				return nil, errors.Wrapf(err, "mathing variants for '%s.%s'", t.Package, t.Name)
 			}
-			pinterfaces[t.Package.String()] = append(pinterfaces[t.Package.String()], i)
+			pinterfaces[t.Package().String()] = append(pinterfaces[t.Package().String()], i)
 		}
 	}
 
@@ -285,7 +285,7 @@ func interfaces(defs map[pkgPath][]*Definition, tts []code.Type) (map[pkgPath]co
 }
 
 func validateNoMissingVariants(vars code.VariantList, expected map[string]struct{}) error {
-	variants := xslices.Map[[]code.Variant, []string](vars, func(t code.Variant) string { return t.Name })
+	variants := xslices.Map[[]code.Variant, []string](vars, func(t code.Variant) string { return t.Name() })
 	// check if all variants are accounted for
 	if diff := xslices.Difference(variants, maps.Keys(expected)); len(diff) > 0 {
 		return fmt.Errorf("failed to match following %v variants", diff)
@@ -296,7 +296,7 @@ func validateNoMissingVariants(vars code.VariantList, expected map[string]struct
 func validateDefinitions(pdefs map[pkgPath][]*Definition, types []code.Type) error {
 	provided := xslices.ToMap[[]code.Type, map[string]code.Type](
 		types, func(t code.Type) string {
-			return (&xtypes.Tuple[string, string]{First: t.Name, Second: t.Package.String()}).String()
+			return (&xtypes.Tuple[string, string]{First: t.Name(), Second: t.Package().String()}).String()
 		}, nil,
 	)
 
@@ -345,16 +345,16 @@ func validateDefinitions(pdefs map[pkgPath][]*Definition, types []code.Type) err
 			if !ok {
 				continue
 			}
-			if name.Name == v.First.MarkerMethod {
+			if name.Name == v.First.MarkerMethod() {
 				found = true
 				break
 			}
 		}
 		if !found {
-			return fmt.Errorf("interface '%s.%s' missing zero arg/returns marker-method '%s'",
-				v.First.Package,
-				v.First.Name,
-				v.First.MarkerMethod,
+			return fmt.Errorf("interface '%s.%s' missing zero arg/returns marker-method %q",
+				v.First.Package(),
+				v.First.Name(),
+				v.First.MarkerMethod(),
 			)
 		}
 	}

@@ -14,7 +14,11 @@ file. If both are provided, inputs from command line overwrite inputs from confi
 
 Usage:
 
-	gopoly [flags]
+	gopoly [commands] [flags]
+
+The commands are:
+	init
+		Creates a .gopoly.yaml configuration file with dummy values.
 
 The flags are:
 
@@ -36,7 +40,11 @@ The flags are:
 	-t
 		Types information.
 
-# Examples
+# Examples:
+
+Create a configuration file with dummy values:
+
+	gopoly init
 
 Generate unmarshaling functions based on the default config file:
 

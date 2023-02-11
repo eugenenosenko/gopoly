@@ -8,7 +8,8 @@ import (
 	"github.com/eugenenosenko/gopoly/internal/xslices"
 )
 
-// DecodingStrategy
+// DecodingStrategy represents a specific decoding algorithm that will be used
+// when unmarshaling polymorphic structure, it can be either DecodingStrategyStrict or DecodingStrategyDiscriminator.
 type DecodingStrategy string
 
 func (s DecodingStrategy) String() string {
@@ -33,7 +34,12 @@ func (s DecodingStrategy) IsValid() bool {
 }
 
 const (
-	DecodingStrategyStrict        = DecodingStrategy("strict")
+	// DecodingStrategyStrict is the decoding algorithm that will try to match 1:1 fields on JSON payload and on struct and
+	// if JSON payload does contain a field that is not present on structure, it will return error.
+	DecodingStrategyStrict = DecodingStrategy("strict")
+
+	// DecodingStrategyDiscriminator is the decoding algorithm that will try to unmarshal payload based
+	// on discriminator field value.
 	DecodingStrategyDiscriminator = DecodingStrategy("discriminator")
 )
 
@@ -118,7 +124,7 @@ type Import interface {
 	ShortName() string
 	Path() string
 	Aliased() bool
-	Source() *Source
+	Source() Source
 }
 
 type ImportList []Import
