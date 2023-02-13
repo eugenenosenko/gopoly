@@ -109,8 +109,8 @@ func (c PrivateContact) IsContact() {}
 
 ```yaml
 types:
-  - type: UserEvent
-    subtypes:
+  - name: UserEvent
+    variants:
       - UserDeletedEvent
       - UserCreatedEvent
     decoding_strategy: "discriminator"
@@ -121,11 +121,11 @@ types:
         CREATED: UserCreatedEvent
     output:
       filename: "events.gen.go"
-  - type: Contact # this type inherits most of its configuration from base
+  - name: Contact # this type inherits most of its configuration from base
     package: "github.com/eugenenosenko/gopoly/tests/e2e/testdata/users"
-  - type: User
+  - name: User
     package: "github.com/eugenenosenko/gopoly/tests/e2e/testdata/users"
-    subtypes:
+    variants:
       - RegularUser
       - PrivilegedUser
       - BannedUser
@@ -176,7 +176,7 @@ JSON-schema for the config file can be found [here](config-json-schema.json)
 | `-p` | package name                                                  | `-p "github.com/user/lib/models"`     |
 | `-d` | decoder strategy `strict` or `discriminator`                  | `-d "strict"`                         |
 | `-m` | marker method [marker-interfaces], string or template         | `-m "Is{{.Name}}"` or `-m "IsMyType"` |
-| `-t` | variant types' information, i.e. subtypes, discriminator etc. | `-t "Runner subtypes=A,B"`            |
+| `-t` | variant types' information, i.e. variants, discriminator etc. | `-t "Runner variants=A,B"`            |
 
 [marker-interfaces]: https://en.wikipedia.org/wiki/Marker_interface_pattern
 
@@ -185,7 +185,7 @@ It's possible to provide additional variant specific configuration via `-t` flag
 
 | option                  | description                                            | example                                     |
 |-------------------------|--------------------------------------------------------|---------------------------------------------|
-| `subtypes`              | type variants that implement the i-face                | `subtypes=SlowRunner,FastRunner`            |
+| `variants`              | type variants that implement the i-face                | `variants=SlowRunner,FastRunner`            |
 | `marker_method`         | marker method name, can be template                    | `marker_method=IsRunner`                    |
 | `decoding_strategy`     | either `strict` or `discriminator`                     | `decoding_strategy=discriminator`           |
 | `discriminator.field`   | field name that determines which discriminator mapping | `discriminator.field=runner_type`           |
@@ -193,7 +193,7 @@ It's possible to provide additional variant specific configuration via `-t` flag
 
 An example of such configuration would be:
 ```
--t "Runner subtypes=SlowRunner,FastRunner marker_method=IsRunner decoding_strategy=discriminator discriminator.field=type discriminator.mapping=slow:SlowRunner,fast:FastRunner
+-t "Runner variants=SlowRunner,FastRunner marker_method=IsRunner decoding_strategy=discriminator discriminator.field=type discriminator.mapping=slow:SlowRunner,fast:FastRunner
 ```
 
 ## glossary
