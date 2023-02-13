@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"flag"
+	"fmt"
 	"os"
 	"regexp"
 	"text/template"
@@ -48,7 +49,7 @@ func newMergedConfig() (*config.Config, error) {
 	ntype := target.Types.AssociateByTypeName()
 	// overwrite what is defined in config file with input from CLI
 	for _, t := range types.types {
-		ntype[t.Type] = t
+		ntype[t.Name] = t
 	}
 
 	for _, t := range ntype {
@@ -73,6 +74,9 @@ func newMergedConfig() (*config.Config, error) {
 		} else if t.DecodingStrategy == "" {
 			t.DecodingStrategy = target.DecodingStrategy
 		}
+		if ds := t.DecodingStrategy; !ds.IsValid() {
+			return nil, fmt.Errorf("not a valid decoding-strategy %s", ds)
+		}
 	}
 	target.Types = maps.Values(ntype)
 
@@ -84,7 +88,7 @@ func newMergedConfig() (*config.Config, error) {
 				return nil, errors.Wrap(err, "parsing marker-method template field")
 			}
 			var b bytes.Buffer
-			if err = parse.Execute(&b, map[string]string{"Type": def.Type}); err != nil {
+			if err = parse.Execute(&b, map[string]string{"Name": def.Name}); err != nil {
 				return nil, errors.Wrap(err, "executing marker-method template")
 			}
 			def.MarkerMethod = b.String()

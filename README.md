@@ -137,7 +137,7 @@ types:
         BANNED: BannedUser
     output:
       filename: "internal/models/users.gen.go"
-marker_method: "Is{{ .Type }}"
+marker_method: "Is{{ .Name }}"
 decoding_strategy: "strict"
 package: "github.com/eugenenosenko/gopoly/tests/e2e/testdata/events"
 output:
@@ -175,7 +175,7 @@ JSON-schema for the config file can be found [here](config-json-schema.json)
 | `-c` | config filename path                                          | `-c "myconfig.yml"`                   |
 | `-p` | package name                                                  | `-p "github.com/user/lib/models"`     |
 | `-d` | decoder strategy `strict` or `discriminator`                  | `-d "strict"`                         |
-| `-m` | marker method [marker-interfaces], string or template         | `-m "Is{{.Type}}"` or `-m "IsMyType"` |
+| `-m` | marker method [marker-interfaces], string or template         | `-m "Is{{.Name}}"` or `-m "IsMyType"` |
 | `-t` | variant types' information, i.e. subtypes, discriminator etc. | `-t "Runner subtypes=A,B"`            |
 
 [marker-interfaces]: https://en.wikipedia.org/wiki/Marker_interface_pattern

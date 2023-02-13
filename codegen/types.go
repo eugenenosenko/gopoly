@@ -14,13 +14,13 @@ type Task struct {
 	// Template string that is then parsed into template.Template
 	Template string
 
-	// Data represents Types, Interfaces, and Variants from a specific package,
+	// Input represents Types, Interfaces, and Variants from a specific package,
 	// that need to be generated.
-	Data *Data
+	Input *Input
 }
 
-// Data represents Types, Interfaces, and Variants from a specific package,
-type Data struct {
+// Input represents Types, Interfaces, and Variants from a specific package,
+type Input struct {
 	Package string
 	Imports []*code.Import
 	Types   []*Type

@@ -37,8 +37,8 @@ const (
 )
 
 type TypeDefinition struct {
-	Type             string                  `yaml:"type"`
-	Subtypes         []string                `yaml:"subtypes,omitempty"`
+	Name             string                  `yaml:"name"`
+	Variants         []string                `yaml:"variants,omitempty"`
 	MarkerMethod     string                  `yaml:"marker_method,omitempty"`
 	DecodingStrategy DecodingStrategy        `yaml:"decoding_strategy,omitempty"`
 	Discriminator    DiscriminatorDefinition `yaml:"discriminator,omitempty"`
@@ -78,7 +78,7 @@ func (tts TypesList) AssociateByTypeName() map[string]*TypeDefinition {
 	return xslices.ToMap[TypesList, map[string]*TypeDefinition](
 		tts,
 		func(t *TypeDefinition) string {
-			return t.Type
+			return t.Name
 		},
 		nil,
 	)

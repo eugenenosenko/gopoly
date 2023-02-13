@@ -1,4 +1,4 @@
-package codegen
+package templates
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/eugenenosenko/gopoly/code"
+	"github.com/eugenenosenko/gopoly/codegen"
 	"github.com/eugenenosenko/gopoly/internal/xslices"
 )
 
@@ -21,9 +22,9 @@ func DefaultFuncs() template.FuncMap {
 	}
 }
 
-// lookupImports will fetch required imports for the required Data, without duplicates and
+// lookupImports will fetch required imports for the required Input, without duplicates and
 // returns it in a proper string format.
-func lookupImports(d *Data) string {
+func lookupImports(d *codegen.Input) string {
 	m := xslices.ToMap[[]*code.Import, map[string]*code.Import](d.Imports, func(i *code.Import) string {
 		return i.Path
 	}, nil)

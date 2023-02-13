@@ -1,4 +1,4 @@
-package codegen
+package generator
 
 import (
 	_ "embed"
@@ -8,17 +8,17 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+
+	"github.com/eugenenosenko/gopoly/codegen"
+	"github.com/eugenenosenko/gopoly/templates"
 )
 
 type WriterProvider interface {
 	Provide(name string) (io.WriteCloser, error)
 }
 
-//go:embed template.gotpl
-var DefaultJSONTemplate string
-
 type Generator interface {
-	Generate(*Task) error
+	Generate(*codegen.Task) error
 }
 
 type Config struct {
@@ -26,19 +26,19 @@ type Config struct {
 	Provider WriterProvider
 }
 
-type generator struct {
+type templateGenerator struct {
 	logf     func(format string, args ...any)
 	provider WriterProvider
 }
 
-func NewGenerator(c *Config) (*generator, error) {
+func NewTemplateGenerator(c *Config) (*templateGenerator, error) {
 	if c == nil {
 		return nil, fmt.Errorf("config cannot be nil")
 	}
-	return &generator{provider: c.Provider, logf: c.Logf}, nil
+	return &templateGenerator{provider: c.Provider, logf: c.Logf}, nil
 }
 
-func (g *generator) Generate(t *Task) error {
+func (g *templateGenerator) Generate(t *codegen.Task) error {
 	w, err := g.provider.Provide(t.Filename)
 	if err != nil {
 		return errors.Wrapf(err, "creating %s file", t.Filename)
@@ -50,12 +50,12 @@ func (g *generator) Generate(t *Task) error {
 	}(w)
 
 	temp := template.Must(template.New("gopoly").
-		Funcs(DefaultFuncs()).
+		Funcs(templates.DefaultFuncs()).
 		Parse(t.Template))
-	if err := temp.Execute(w, t.Data); err != nil {
+	if err := temp.Execute(w, t.Input); err != nil {
 		return errors.Wrapf(err, "generating code to file %s", t.Filename)
 	}
 	return nil
 }
 
-var _ Generator = (*generator)(nil)
+var _ Generator = (*templateGenerator)(nil)

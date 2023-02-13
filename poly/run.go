@@ -10,6 +10,7 @@ import (
 	"github.com/eugenenosenko/gopoly/codegen"
 	"github.com/eugenenosenko/gopoly/config"
 	"github.com/eugenenosenko/gopoly/internal/xmaps"
+	"github.com/eugenenosenko/gopoly/templates"
 )
 
 // Run is the entry point of the application. Takes context.Context and config.Config and uses that to generate
@@ -21,7 +22,7 @@ import (
 // If multiple output files have been provided and the types are located in the same package, then declarations
 // will be split between those files. If multiple types share the same output file but are located in the same package
 // declarations will be created in the same file.
-func (r *Runner) Run(ctx context.Context, c *config.Config) error {
+func (r *Client) Run(ctx context.Context, c *config.Config) error {
 	sources, err := r.Loader.Load(ctx, c.Types)
 	if err != nil {
 		return errors.Wrapf(err, "loading source from packages")
@@ -35,7 +36,7 @@ func (r *Runner) Run(ctx context.Context, c *config.Config) error {
 		for pkg, tts := range types.AssociateByPkgName() {
 			p := code.Package(pkg)
 			src := psources[p]
-			d := codegen.Data{
+			d := codegen.Input{
 				Package: p.Name(),
 				Imports: src.Imports,
 			}
@@ -66,8 +67,8 @@ func (r *Runner) Run(ctx context.Context, c *config.Config) error {
 			}
 			tasks = append(tasks, &codegen.Task{
 				Filename: outputFilename(p, filename),
-				Template: codegen.DefaultJSONTemplate,
-				Data:     &d,
+				Template: templates.DefaultJSONTemplate(),
+				Input:    &d,
 			})
 		}
 	}

@@ -222,7 +222,7 @@ func interfaces(defs map[PkgPath][]*Definition, tts []*config.TypeDefinition) (m
 	for _, t := range tts {
 		expected := xslices.ToSet[[]string](maps.Values(t.Discriminator.Mapping))
 		i := &code.Interface{
-			Name:         t.Type,
+			Name:         t.Name,
 			MarkerMethod: t.MarkerMethod,
 			Variants:     []*code.Variant{},
 			Pkg:          t.Package,
@@ -271,7 +271,7 @@ func interfaces(defs map[PkgPath][]*Definition, tts []*config.TypeDefinition) (m
 		} else {
 			err := validateNoMissingVariants(i.Variants, expected) // validate if all were found
 			if err != nil {
-				return nil, errors.Wrapf(err, "mathing variants for '%s.%s'", t.Package, t.Type)
+				return nil, errors.Wrapf(err, "mathing variants for '%s.%s'", t.Package, t.Name)
 			}
 			pinterfaces[t.Package] = append(pinterfaces[t.Package], i)
 		}
@@ -295,7 +295,7 @@ func validateNoMissingVariants(vars code.VariantList, expected map[string]struct
 func validateDefinitions(pdefs map[PkgPath][]*Definition, types []*config.TypeDefinition) error {
 	provided := xslices.ToMap[[]*config.TypeDefinition, map[string]*config.TypeDefinition](
 		types, func(t *config.TypeDefinition) string {
-			return (&xtypes.Tuple[string, string]{First: t.Type, Second: t.Package}).String()
+			return (&xtypes.Tuple[string, string]{First: t.Name, Second: t.Package}).String()
 		}, nil,
 	)
 
@@ -316,7 +316,7 @@ func validateDefinitions(pdefs map[PkgPath][]*Definition, types []*config.TypeDe
 				if !ok {
 					continue
 				}
-				// composite map key Type.Name + PkgPath
+				// composite map key Name.Name + PkgPath
 				key := (&xtypes.Tuple[string, string]{First: ts.Name.Name, Second: pkg}).String()
 				// check if this interface is among those provided by the configuration
 				if t, present := provided[key]; present {
@@ -352,7 +352,7 @@ func validateDefinitions(pdefs map[PkgPath][]*Definition, types []*config.TypeDe
 		if !found {
 			return fmt.Errorf("interface '%s.%s' missing zero arg/returns marker-method '%s'",
 				v.First.Package,
-				v.First.Type,
+				v.First.Name,
 				v.First.MarkerMethod,
 			)
 		}

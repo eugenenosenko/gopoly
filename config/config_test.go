@@ -20,8 +20,8 @@ func TestConfig_New(t *testing.T) {
 		require.Equal(t, &Config{
 			Types: []*TypeDefinition{
 				{
-					Type:         "AdvertBase",
-					Subtypes:     []string{"RentAdvert", "SellAdvert"},
+					Name:         "AdvertBase",
+					Variants:     []string{"RentAdvert", "SellAdvert"},
 					MarkerMethod: "IsAdvert",
 					Discriminator: DiscriminatorDefinition{
 						Field: "type",
@@ -33,11 +33,11 @@ func TestConfig_New(t *testing.T) {
 					DecodingStrategy: DecodingStrategyDiscriminator,
 				},
 				{
-					Type:             "Property",
+					Name:             "Property",
 					DecodingStrategy: DecodingStrategyStrict,
 				},
 				{
-					Type: "Owner",
+					Name: "Owner",
 					Discriminator: DiscriminatorDefinition{
 						Field: "kind",
 						Mapping: map[string]string{

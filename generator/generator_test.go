@@ -1,4 +1,4 @@
-package codegen
+package generator
 
 import (
 	"bytes"
@@ -9,7 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/eugenenosenko/gopoly/code"
+	"github.com/eugenenosenko/gopoly/codegen"
 	"github.com/eugenenosenko/gopoly/config"
+	"github.com/eugenenosenko/gopoly/templates"
 )
 
 type dummyCreator struct{ buf *bytes.Buffer }
@@ -21,7 +23,7 @@ func (d *dummyCreator) Close() error                             { return nil }
 func TestGenerator(t *testing.T) {
 	t.Run("should correctly generate code for provided configuration", func(t *testing.T) {
 		var b bytes.Buffer
-		gen, err := NewGenerator(&Config{
+		gen, err := NewTemplateGenerator(&Config{
 			Provider: &dummyCreator{&b},
 			Logf:     func(_ string, _ ...any) {},
 		})
@@ -42,12 +44,12 @@ func TestGenerator(t *testing.T) {
 		}, Interface: i}
 		i.Variants = code.VariantList{sell}
 
-		err = gen.Generate(&Task{
+		err = gen.Generate(&codegen.Task{
 			Filename: "_",
-			Template: DefaultJSONTemplate,
-			Data: &Data{
+			Template: templates.DefaultJSONTemplate(),
+			Input: &codegen.Input{
 				Package: "github.com/eugenenosenko/gopoly/internal/models",
-				Types: []*Type{
+				Types: []*codegen.Type{
 					{
 						Name:               "Advert",
 						Variants:           map[string]*code.Variant{"SELL": sell},

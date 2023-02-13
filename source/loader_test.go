@@ -20,8 +20,8 @@ func TestLoad(t *testing.T) {
 
 		got, err := l.Load(context.Background(), []*config.TypeDefinition{
 			{
-				Type:             "Runner",
-				Subtypes:         []string{"FastRunner", "SlowRunner"},
+				Name:             "Runner",
+				Variants:         []string{"FastRunner", "SlowRunner"},
 				MarkerMethod:     "IsRunner",
 				DecodingStrategy: config.DecodingStrategyStrict,
 				Package:          "github.com/eugenenosenko/gopoly/source/testdata",

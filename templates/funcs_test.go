@@ -1,4 +1,4 @@
-package codegen
+package templates
 
 import (
 	"strings"
@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/eugenenosenko/gopoly/code"
+	"github.com/eugenenosenko/gopoly/codegen"
 	"github.com/eugenenosenko/gopoly/config"
 )
 
@@ -35,9 +36,9 @@ func TestLookUpImport(t *testing.T) {
 		}, Interface: i}
 		i.Variants = code.VariantList{sell, rent}
 
-		data := &Data{
+		data := &codegen.Input{
 			Package: "github.com/eugenenosenko/gopoly/internal/models",
-			Types: []*Type{
+			Types: []*codegen.Type{
 				{
 					Name:               "Advert",
 					Variants:           map[string]*code.Variant{"SELL": sell, "RENT": rent},

@@ -13,8 +13,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/eugenenosenko/gopoly/codegen"
 	"github.com/eugenenosenko/gopoly/config"
+	"github.com/eugenenosenko/gopoly/generator"
 	"github.com/eugenenosenko/gopoly/internal/xfs"
 	"github.com/eugenenosenko/gopoly/poly"
 	"github.com/eugenenosenko/gopoly/source"
@@ -23,8 +23,6 @@ import (
 type RecoveryFunc func(*App)
 
 type App struct {
-	usage func(*App)
-
 	Logf           func(format string, args ...any)
 	Ctx            context.Context
 	RecoveryFunc   RecoveryFunc
@@ -78,7 +76,7 @@ func (a *App) execute() {
 		reportAndExit(a, errors.Wrapf(err, "creating source.Loader"))
 	}
 
-	generator, err := codegen.NewGenerator(&codegen.Config{
+	gen, err := generator.NewTemplateGenerator(&generator.Config{
 		Logf:     log.Printf,
 		Provider: xfs.FileWriterProviderFunc(os.Create),
 	})
@@ -86,13 +84,13 @@ func (a *App) execute() {
 		reportAndExit(a, errors.Wrapf(err, "creating codegen.Generator"))
 	}
 
-	runner, err := poly.NewRunner(&poly.RunnerConfig{
+	runner, err := poly.NewClient(&poly.Config{
 		Logf:          log.Printf,
 		SourceLoader:  s,
-		CodeGenerator: generator,
+		CodeGenerator: gen,
 	})
 	if err != nil {
-		reportAndExit(a, errors.Wrapf(err, "creating poly.Runner"))
+		reportAndExit(a, errors.Wrapf(err, "creating poly.Client"))
 	}
 
 	conf, err := a.ConfigProvider()

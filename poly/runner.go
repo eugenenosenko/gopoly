@@ -3,28 +3,28 @@ package poly
 import (
 	"github.com/pkg/errors"
 
-	"github.com/eugenenosenko/gopoly/codegen"
+	"github.com/eugenenosenko/gopoly/generator"
 	"github.com/eugenenosenko/gopoly/source"
 )
 
-type RunnerConfig struct {
+type Config struct {
 	SourceLoader  source.Loader
-	CodeGenerator codegen.Generator
+	CodeGenerator generator.Generator
 	Logf          func(format string, args ...any)
 }
 
-// Runner is the main component of the application. It takes source.Loader and codegen.Generator
-type Runner struct {
+// Client is the main component of the application. It takes source.Loader and codegen.Generator
+type Client struct {
 	Loader    source.Loader
-	Generator codegen.Generator
+	Generator generator.Generator
 	Logf      func(format string, args ...any)
 }
 
-func NewRunner(c *RunnerConfig) (*Runner, error) {
+func NewClient(c *Config) (*Client, error) {
 	if c == nil {
-		return nil, errors.New("poly.NewRunner: config is nil")
+		return nil, errors.New("poly.NewClient: config is nil")
 	}
-	return &Runner{
+	return &Client{
 		Loader:    c.SourceLoader,
 		Logf:      c.Logf,
 		Generator: c.CodeGenerator,
