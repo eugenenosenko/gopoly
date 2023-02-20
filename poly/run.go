@@ -23,6 +23,11 @@ import (
 // will be split between those files. If multiple types share the same output file but are located in the same package
 // declarations will be created in the same file.
 func (r *Client) Run(ctx context.Context, c *config.Config) error {
+	if len(c.Types) == 0 {
+		r.Logf("No types provided or configuration is incorrect.")
+		return nil
+	}
+
 	sources, err := r.Loader.Load(ctx, c.Types)
 	if err != nil {
 		return errors.Wrapf(err, "loading source from packages")
