@@ -35,13 +35,13 @@ func (a *App) Exit(status int) {
 
 func (a *App) Execute(info *RunInfo) {
 	defer a.RecoveryFunc(a)
-	if isInitCmd(os.Args[1]) {
-		var exit int
+	if len(os.Args) > 2 && isInitCmd(os.Args[1]) {
+		var code int
 		if err := a.RunInit(); err != nil {
 			log.Printf("Failed to execute init command %v", err)
-			exit = 3
+			code = 3
 		}
-		a.Exit(exit)
+		a.Exit(code)
 	}
 
 	a.Logf("Run info: %s", info)
